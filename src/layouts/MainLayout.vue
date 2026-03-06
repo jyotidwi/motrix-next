@@ -19,6 +19,7 @@ import UpdateDialog from '@/components/preference/UpdateDialog.vue'
 import { useTaskStore } from '@/stores/task'
 import { usePreferenceStore } from '@/stores/preference'
 import { openUrl } from '@tauri-apps/plugin-opener'
+import aria2Api, { isEngineReady } from '@/api/aria2'
 import { open as openDialog } from '@tauri-apps/plugin-dialog'
 import {
   NModal, NCard, NButton, NSpace, NIcon, useDialog,
@@ -47,6 +48,25 @@ let unlistenMenuEvent: (() => void) | null = null
 let unlistenCloseRequested: (() => void) | null = null
 let unlistenDeepLink: (() => void) | null = null
 let unlistenSingleInstance: (() => void) | null = null
+let globalStatTimer: ReturnType<typeof setTimeout> | null = null
+
+function startGlobalPolling() {
+  stopGlobalPolling()
+  function tick() {
+    if (isEngineReady()) {
+      appStore.fetchGlobalStat(aria2Api).catch(() => {})
+    }
+    globalStatTimer = setTimeout(tick, appStore.interval)
+  }
+  globalStatTimer = setTimeout(tick, appStore.interval)
+}
+
+function stopGlobalPolling() {
+  if (globalStatTimer) {
+    clearTimeout(globalStatTimer)
+    globalStatTimer = null
+  }
+}
 
 watch(() => appStore.pendingUpdate, (update) => {
   if (update) {
@@ -70,6 +90,7 @@ function handleExitCancel() {
 
 onMounted(async () => {
   setTimeout(() => { appReady.value = true }, 120)
+  startGlobalPolling()
 
   router.beforeEach((to, from) => {
     const leavingPrefs = from.path.startsWith('/preference') && !to.path.startsWith('/preference')
@@ -181,6 +202,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  stopGlobalPolling()
   if (unlistenDragDrop) unlistenDragDrop()
   if (unlistenMenuEvent) unlistenMenuEvent()
   if (unlistenCloseRequested) unlistenCloseRequested()

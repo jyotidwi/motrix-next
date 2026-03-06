@@ -465,25 +465,23 @@ onMounted(() => {
 }
 .save-btn-dirty {
   background-color: #18a058 !important;
-  border: none !important;
   transition: background-color 0.35s cubic-bezier(0.2, 0, 0, 1);
 }
 .save-btn-dirty :deep(.n-button__border) {
-  border: none !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
 }
 .save-btn-dirty :deep(.n-button__state-border) {
-  border: none !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
 }
 .discard-btn-dirty {
   background-color: rgba(208, 48, 80, 0.85) !important;
-  border: none !important;
   color: #fff !important;
   transition: background-color 0.35s cubic-bezier(0.2, 0, 0, 1), color 0.35s cubic-bezier(0.2, 0, 0, 1);
 }
 .discard-btn-dirty :deep(.n-button__border) {
-  border: none !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
 }
 .discard-btn-dirty :deep(.n-button__state-border) {
-  border: none !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
 }
 </style>

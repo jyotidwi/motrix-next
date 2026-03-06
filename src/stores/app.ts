@@ -113,7 +113,7 @@ export const useAppStore = defineStore('app', () => {
                 }
 
                 // Dock badge speed (macOS)
-                if (parsed.downloadSpeed > 0) {
+                if (prefStore.config?.dockBadgeSpeed !== false && parsed.downloadSpeed > 0) {
                     await invoke('update_dock_badge', { label: `${compactSize(parsed.downloadSpeed)}/s` })
                 } else {
                     await invoke('update_dock_badge', { label: '' })

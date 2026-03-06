@@ -39,10 +39,7 @@ function startPolling() {
   stopPolling()
   function tick() {
     if (isEngineReady()) {
-      Promise.all([
-        taskStore.fetchList(),
-        appStore.fetchGlobalStat(aria2Api),
-      ]).catch(() => {})
+      taskStore.fetchList().catch(() => {})
     }
     refreshTimer = setTimeout(tick, appStore.interval)
   }

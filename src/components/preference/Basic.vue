@@ -4,13 +4,14 @@ import { useI18n } from 'vue-i18n'
 import { isEqual } from 'lodash-es'
 import { usePreferenceStore } from '@/stores/preference'
 import { relaunch } from '@tauri-apps/plugin-process'
+import { platform } from '@tauri-apps/plugin-os'
 import { open as openDialog } from '@tauri-apps/plugin-dialog'
 import { invoke } from '@tauri-apps/api/core'
 import { downloadDir } from '@tauri-apps/api/path'
 import { extractSpeedUnit } from '@shared/utils'
 import {
   NForm, NFormItem, NInput, NInputNumber, NSelect, NCheckbox, NSwitch,
-  NButton, NSpace, NDivider, NInputGroup, NText, NCollapseTransition, useDialog
+  NButton, NSpace, NDivider, NInputGroup, NText, NCollapseTransition, NTag, useDialog
 } from 'naive-ui'
 import { FolderOpenOutline, CloudDownloadOutline } from '@vicons/ionicons5'
 import { NIcon } from 'naive-ui'
@@ -23,6 +24,13 @@ const preferenceStore = usePreferenceStore()
 const message = useAppMessage()
 const dialog = useDialog()
 const defaultDownloadDir = ref('')
+const currentPlatform = ref('')
+const isMac = computed(() => currentPlatform.value === 'macos')
+const isMacOrWin = computed(() => currentPlatform.value === 'macos' || currentPlatform.value === 'windows')
+const platformLabel = computed(() => {
+  const map: Record<string, string> = { macos: 'macOS', windows: 'Windows', linux: 'Linux' }
+  return map[currentPlatform.value] || currentPlatform.value
+})
 const updateDialogRef = ref<InstanceType<typeof UpdateDialog> | null>(null)
 
 const checkIntervalOptions = [
@@ -52,6 +60,7 @@ function buildForm() {
     autoHideWindow: !!config.autoHideWindow,
     showProgressBar: !!config.showProgressBar,
     traySpeedometer: !!config.traySpeedometer,
+    dockBadgeSpeed: config.dockBadgeSpeed !== false,
     taskNotification: config.taskNotification !== false,
     newTaskShowDownloading: config.newTaskShowDownloading !== false,
     noConfirmBeforeDeleteTask: !!config.noConfirmBeforeDeleteTask,
@@ -241,6 +250,7 @@ function handleCheckUpdate() {
 
 onMounted(async () => {
   try { defaultDownloadDir.value = await downloadDir() } catch {}
+  try { currentPlatform.value = platform() } catch {}
   loadForm()
 })
 </script>
@@ -275,18 +285,24 @@ onMounted(async () => {
       </NFormItem>
       <UpdateDialog ref="updateDialogRef" />
 
-      <NDivider title-placement="left">{{ t('preferences.appearance') }}</NDivider>
+      <NDivider title-placement="left">{{ t('preferences.ui') }}</NDivider>
+      <NFormItem :label="t('preferences.detected-platform')">
+        <NTag type="info" round>{{ platformLabel }}</NTag>
+      </NFormItem>
       <NFormItem :label="t('preferences.appearance')">
         <NSelect v-model:value="form.theme" :options="themeOptions" style="width: 200px;" />
       </NFormItem>
       <NFormItem :label="t('preferences.auto-hide-window')">
         <NSwitch v-model:value="form.autoHideWindow" />
       </NFormItem>
-      <NFormItem :label="t('preferences.show-progress-bar')">
+      <NFormItem v-if="isMacOrWin" :label="t('preferences.show-progress-bar')">
         <NSwitch v-model:value="form.showProgressBar" />
       </NFormItem>
-      <NFormItem :label="t('preferences.tray-speedometer')">
+      <NFormItem v-if="isMac" :label="t('preferences.tray-speedometer')">
         <NSwitch v-model:value="form.traySpeedometer" />
+      </NFormItem>
+      <NFormItem v-if="isMac" :label="t('preferences.dock-badge-speed')">
+        <NSwitch v-model:value="form.dockBadgeSpeed" />
       </NFormItem>
 
       <NDivider title-placement="left">Language</NDivider>
@@ -419,25 +435,23 @@ onMounted(async () => {
 }
 .save-btn-dirty {
   background-color: #18a058 !important;
-  border: none !important;
   transition: background-color 0.35s cubic-bezier(0.2, 0, 0, 1);
 }
 .save-btn-dirty :deep(.n-button__border) {
-  border: none !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
 }
 .save-btn-dirty :deep(.n-button__state-border) {
-  border: none !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
 }
 .discard-btn-dirty {
   background-color: rgba(208, 48, 80, 0.85) !important;
-  border: none !important;
   color: #fff !important;
   transition: background-color 0.35s cubic-bezier(0.2, 0, 0, 1), color 0.35s cubic-bezier(0.2, 0, 0, 1);
 }
 .discard-btn-dirty :deep(.n-button__border) {
-  border: none !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
 }
 .discard-btn-dirty :deep(.n-button__state-border) {
-  border: none !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
 }
 </style>
