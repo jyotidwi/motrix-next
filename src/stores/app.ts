@@ -81,7 +81,7 @@ export const useAppStore = defineStore('app', () => {
 
     async function fetchGlobalStat(api: {
         getGlobalStat: () => Promise<Record<string, string>>,
-        fetchActiveTaskList?: () => Promise<{ totalLength: string; completedLength: string }[]>
+        fetchActiveTaskList?: () => Promise<Record<string, unknown>[]>
     }) {
         try {
             const data = await api.getGlobalStat()
