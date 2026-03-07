@@ -11,6 +11,7 @@ import { isEngineReady } from '@/api/aria2'
 import { deleteTaskFiles } from '@/composables/useFileDelete'
 import type { Aria2Task } from '@shared/types'
 import { TASK_STATUS } from '@shared/constants'
+import { ARIA2_ERROR_CODES } from '@shared/aria2ErrorCodes'
 import { logger } from '@shared/logger'
 import { useDialog, NCheckbox } from 'naive-ui'
 import { useAppMessage } from '@/composables/useAppMessage'
@@ -67,7 +68,16 @@ async function changeCurrentList() {
 }
 
 watch(() => props.status, changeCurrentList)
-onMounted(changeCurrentList)
+onMounted(() => {
+  changeCurrentList()
+  taskStore.setOnTaskError((task) => {
+    if (preferenceStore.config?.taskNotification === false) return
+    const i18nKey = task.errorCode ? ARIA2_ERROR_CODES[task.errorCode] : undefined
+    const taskName = getTaskName(task, { defaultName: 'Unknown', maxLen: 40 })
+    const errorText = i18nKey ? t(i18nKey) : task.errorMessage || t('task.error-unknown')
+    message.error(`${taskName}: ${errorText}`, { duration: 8000, closable: true })
+  })
+})
 onBeforeUnmount(stopPolling)
 
 // File deletion handled by @/composables/useFileDelete

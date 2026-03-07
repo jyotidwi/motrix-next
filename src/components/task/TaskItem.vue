@@ -268,12 +268,16 @@ watch(() => props.task.status, checkFileExists)
 }
 .task-progress-info {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   font-size: 12px;
   line-height: 14px;
   min-height: 14px;
   color: #9b9b9b;
   margin-top: 8px;
+}
+.progress-left {
+  white-space: nowrap;
 }
 .progress-right {
   display: flex;
@@ -318,6 +322,7 @@ watch(() => props.task.status, checkFileExists)
   animation: fade-in 0.3s ease;
 }
 .error-message {
+  flex-basis: 100%;
   font-size: 11px;
   color: #f56c6c;
   margin-top: 4px;

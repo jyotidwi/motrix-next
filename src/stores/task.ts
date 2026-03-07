@@ -57,6 +57,13 @@ export const useTaskStore = defineStore('task', () => {
 
   let api: TaskApi
 
+  const notifiedErrorGids = new Set<string>()
+  let onTaskError: ((task: Aria2Task) => void) | null = null
+
+  function setOnTaskError(fn: (task: Aria2Task) => void) {
+    onTaskError = fn
+  }
+
   function setApi(a: TaskApi) {
     api = a
   }
@@ -82,6 +89,26 @@ export const useTaskStore = defineStore('task', () => {
           logger.debug('TaskStore.fetchPeers', e)
           const fresh = data.find((t: Aria2Task) => t.gid === currentTaskGid.value)
           if (fresh) updateCurrentTaskItem(fresh)
+        }
+      }
+      // Detect newly errored tasks and notify
+      if (onTaskError) {
+        // When viewing the active tab, error tasks land in the stopped pool
+        // so also fetch recent stopped tasks for error scanning
+        const tasksToScan =
+          currentList.value === TASK_STATUS.ACTIVE
+            ? [...data, ...(await api.fetchTaskList({ type: 'stopped' })).slice(0, 20)]
+            : data
+        for (const task of tasksToScan) {
+          if (
+            task.status === TASK_STATUS.ERROR &&
+            task.errorCode &&
+            task.errorCode !== '0' &&
+            !notifiedErrorGids.has(task.gid)
+          ) {
+            notifiedErrorGids.add(task.gid)
+            onTaskError(task)
+          }
         }
       }
     } catch (e) {
@@ -340,5 +367,6 @@ export const useTaskStore = defineStore('task', () => {
     batchPauseSelectedTasks,
     batchRemoveTask,
     restartTask,
+    setOnTaskError,
   }
 })
