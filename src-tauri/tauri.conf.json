@@ -69,7 +69,8 @@
     },
     "windows": {
       "nsis": {
-        "startMenuFolder": "Motrix Next"
+        "startMenuFolder": "Motrix Next",
+        "installerHooks": "nsis/hooks.nsh"
       }
     },
     "linux": {
