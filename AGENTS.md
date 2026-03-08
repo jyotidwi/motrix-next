@@ -256,7 +256,9 @@ Run these before committing changes:
 
 ```bash
 # Frontend
-pnpm test                  # Vitest — 336+ unit tests
+pnpm format                # Auto-format all source files with Prettier
+pnpm format:check          # Verify formatting (CI runs this)
+pnpm test                  # Vitest — 340+ unit tests
 npx vue-tsc --noEmit       # TypeScript type checking
 
 # Backend
@@ -266,6 +268,8 @@ cargo test                 # Rust unit tests
 # Version (when bumping)
 ./scripts/bump-version.sh <version>
 ```
+
+> **Every commit MUST pass `pnpm format:check`.** If you edit any `.ts`, `.vue`, `.css`, or `.json` file, run `pnpm format` before committing. The husky pre-commit hook runs lint-staged automatically, but it only formats staged files — so always verify with `pnpm format:check` if unsure.
 
 > **Note:** `npx vite build` is slow and should only be run when validating production output or debugging locale/bundling issues — not on every change.
 

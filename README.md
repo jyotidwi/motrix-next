@@ -139,6 +139,10 @@ See [AGENTS.md](AGENTS.md) for detailed version management, release workflow, an
 
 PRs and issues are welcome! Please read the [Contributing Guide](docs/CONTRIBUTING.md) and [Code of Conduct](docs/CODE_OF_CONDUCT.md) before getting started.
 
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=AnInsomniacy/motrix-next&type=Date)](https://star-history.com/#AnInsomniacy/motrix-next&Date)
+
 ## License
 
 [MIT](https://opensource.org/licenses/MIT) — Copyright (c) 2025-present AnInsomniacy
