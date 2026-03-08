@@ -170,6 +170,40 @@ The Tauri JS `check()` API does **not** support runtime endpoint override. Chann
 
 The user's channel preference is stored as `updateChannel` in the preference store.
 
+### How to Publish a Release
+
+1. **Bump the version:**
+
+   ```bash
+   # Stable
+   ./scripts/bump-version.sh 1.4.0
+   # Beta
+   ./scripts/bump-version.sh 1.4.0-beta.1
+   ```
+
+2. **Commit and push:**
+
+   ```bash
+   git add -A && git commit -m "release: v1.4.0"
+   git push
+   ```
+
+3. **Create a GitHub Release:**
+
+   Go to **Releases → Create new release** on GitHub:
+
+   | Setting | Stable | Beta / RC |
+   |---------|--------|-----------|
+   | Tag | `v1.4.0` (create on publish) | `v1.4.0-beta.1` |
+   | Target | `main` | `main` |
+   | Title | `v1.4.0` | `v1.4.0-beta.1` |
+   | "Set as latest release" | ✅ Yes | ❌ No |
+   | "Set as a pre-release" | ❌ No | ✅ Yes |
+
+4. **Click Publish** — CI automatically builds for all 4 platforms and uploads the updater JSON.
+
+> **Do NOT create tags from the command line.** Always use the GitHub Release UI — it triggers the `release.yml` workflow.
+
 ---
 
 ## F. CI/CD Structure
