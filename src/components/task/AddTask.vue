@@ -70,7 +70,6 @@ const form = ref({
   referer: '',
   cookie: '',
   allProxy: '',
-  newTaskShowDownloading: config.newTaskShowDownloading !== false,
 })
 
 const maxSplit = computed(() => config.engineMaxConnectionPerServer || 64)
@@ -150,13 +149,17 @@ watch(
     if (hasBatch.value) {
       // Resolve file-based items and auto-switch tab
       await resolveUnresolvedItems()
+      // Flush URI batch items into the editable textarea, then drain from batch.
+      // This makes form.uris the single source of truth for URI submissions.
+      const uriItems = batch.value.filter((i) => i.kind === 'uri')
+      if (uriItems.length > 0) {
+        form.value.uris = uriItems.map((i) => i.payload).join('\n')
+        appStore.pendingBatch = batch.value.filter((i) => i.kind !== 'uri')
+      }
       if (fileItems.value.length > 0) {
         activeTab.value = ADD_TASK_TYPE.TORRENT
       } else {
         activeTab.value = ADD_TASK_TYPE.URI
-        // Pre-fill URI textarea from batch URI items
-        const uriPayloads = batch.value.filter((i) => i.kind === 'uri').map((i) => i.payload)
-        if (uriPayloads.length > 0) form.value.uris = uriPayloads.join('\n')
       }
     } else {
       activeTab.value = ADD_TASK_TYPE.URI
@@ -359,13 +362,12 @@ async function handleSubmit() {
     if (headers.length > 0) options.header = headers
     if (form.value.allProxy) options['all-proxy'] = form.value.allProxy
 
+    // Submit file-based batch items (torrent/metalink only)
     if (hasBatch.value) {
       await submitBatch(options)
-      // Also submit any manual URIs typed in the URI tab
-      if (form.value.uris.trim() && !batch.value.some((i) => i.kind === 'uri')) {
-        await submitManualUris(options)
-      }
-    } else {
+    }
+    // URI always goes through the editable textarea — single source of truth
+    if (form.value.uris.trim()) {
       await submitManualUris(options)
     }
 
@@ -375,7 +377,7 @@ async function handleSubmit() {
     } else {
       message.success(t('task.add-task-success') || 'Task added successfully')
       handleClose()
-      if (form.value.newTaskShowDownloading) {
+      if (config.newTaskShowDownloading !== false) {
         router.push({ path: '/task/active' }).catch(() => {})
       }
     }
@@ -396,11 +398,10 @@ async function handleSubmit() {
 
 async function submitBatch(options: Aria2EngineOptions) {
   for (const item of batch.value) {
+    if (item.kind === 'uri') continue // URI handled exclusively by submitManualUris
     if (item.status !== 'pending' && item.status !== 'failed') continue
     try {
-      if (item.kind === 'uri') {
-        await taskStore.addUri({ uris: [item.payload], outs: [], options })
-      } else if (item.kind === 'torrent') {
+      if (item.kind === 'torrent') {
         const opts: Aria2EngineOptions = { ...options }
         delete opts.out
         if (
